@@ -1,8 +1,9 @@
 pragma solidity ^0.4.0;
 
 contract Token {
+
     uint256 public totalSupply;
-    uint256 public issuedSupply;
+    uint256 public availableNumber;
     mapping (address => uint256) balances;
     
     address owner;
@@ -12,23 +13,22 @@ contract Token {
 
     function Token(uint256 _totalSupply) public {
         totalSupply = _totalSupply;
+        availableNumber = _totalSupply;
         owner = msg.sender;    
     }
 
     function () payable public {
         uint256 amount = msg.value * price / 1 ether;
-        uint256 canIssue = totalSupply - issuedSupply;
-        
-        require(canIssue > 0);
-        
-        if (amount > canIssue) {
-            amount = canIssue;
+        if (amount > availableNumber) {
+            amount = availableNumber;
         } 
-        
+
+        require(amount > 0);
+
         balances[msg.sender] += amount;
-        msg.sender.transfer(msg.value - amount*1 ether/100);
-        Transfer(0x0, msg.sender,amount*1 ether/100);
-        Transfer(0x0, msg.sender,msg.value);
+        availableNumber -= amount;
+        msg.sender.transfer(msg.value - amount*1 ether/price);
+        Transfer(0x0, msg.sender,amount*1 ether/price);
     }
 
     function balanceOf(address _addr) public constant returns (uint256) {
