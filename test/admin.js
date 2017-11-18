@@ -1,10 +1,8 @@
-var Web3 = require('web3');
-var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
-var BigNumber = web3.utils.BN;
+
 var Token = artifacts.require('./Token.sol');
 var Admin = artifacts.require("./Admin.sol");
 
-contract('Token', function (accounts) {
+contract('Admin', function (accounts) {
     var admin, token;
     it('Set dividend', function () {
         return Admin.deployed()
@@ -15,7 +13,7 @@ contract('Token', function (accounts) {
             .then((instance) => {
                 token = instance;
                 return admin.setDividend(0,
-                    [accounts[3],accounts[4]],
+                    [accounts[3], accounts[4]],
                     [1e18, 22322],
                     { value: 1e18 * 10 }
                 )
@@ -33,25 +31,17 @@ contract('Token', function (accounts) {
         var oldBal;
         var txFee;
         // Get balance before claim
-        return web3.eth.getBalance(ac)
-            .then((rs) => {
-                oldBal = rs;
-                // Claim
-                return token.claim(0, { from: ac })
-            })
+        oldBal = web3.eth.getBalance(ac);
+        return token.claim(0, { from: ac })
             .then((rs) => {
                 txFee = rs.receipt.gasUsed;
-                return web3.eth.getTransaction(rs.tx)
-            })
-            .then((rs) => {
-                txFee = rs.gasPrice*txFee;
+                var tx = web3.eth.getTransaction(rs.tx);
+                txFee = tx.gasPrice * txFee;
 
-                // Get balance after claimed
-                return web3.eth.getBalance(ac)
-            })
-            .then((newBal) => {
-                // Expect new balance = old balance + claim - tx fee
+                // // Get balance after claimed
+                var newBal =  web3.eth.getBalance(ac)
+                // // Expect new balance = old balance + claim - tx fee
                 assert.equal(newBal, oldBal - txFee + 1e18)
-            })
+            });
     })
 });
